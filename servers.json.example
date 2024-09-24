@@ -1,0 +1,5 @@
+{
+  "servers": {
+    "Server_Name": "Server_IP:PORT",
+  }
+}
