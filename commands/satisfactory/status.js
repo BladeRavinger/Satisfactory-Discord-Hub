@@ -45,54 +45,60 @@ module.exports = {
         // Function to fetch and update server state
         const fetchAndUpdateServerState = async () => {
             const serverStates = await Promise.all(
-                selectedServers.map(async (serverName) => {
+                selectedServers.map(async (serverName, index) => { // Added index to use for numbering
                     const serverIp = servers[serverName];
                     const serverState = await fetchServerState(serverIp);
 
                     if (!serverState) {
                         return {
-                            name: serverName,
+                            number: index + 1,
+                            name: `${serverName}`,
                             state: 'Unresponsive',
                             players: 'N/A',
                             avgTicks: 'N/A',
-                            duration: 'N/A'
+                            duration: 'N/A',
+                            tier: '0/9'  // Default tier value for unresponsive servers
                         };
                     }
 
                     return {
-                        name: serverName,
+                        number: index + 1,
+                        name: `${serverName}`,
                         state: serverState.isGameRunning ? 'Online' : 'Offline',
                         players: `${serverState.numConnectedPlayers || 0}/${serverState.playerLimit || 0}`,
                         avgTicks: serverState.averageTickRate ? serverState.averageTickRate.toFixed(3) : 'N/A',
                         duration: serverState.totalGameDuration
                             ? `${Math.floor(serverState.totalGameDuration / 3600)}h ${Math.floor((serverState.totalGameDuration % 3600) / 60)}m`
-                            : 'N/A'
+                            : 'N/A',
+                        tier: `${serverState.techTier || 0}/9` // Fetch the tier value
                     };
                 })
             );
 
             const lastUpdatedTime = new Date().toLocaleString(); // Current time for "Last Update"
 
+            // First Embed with numbered server names, status, and players
             const serverEmbed1 = new EmbedBuilder()
                 .setColor(0x0099ff)
                 .setAuthor({ name: 'Satisfactory Bot', iconURL: 'https://some-icon-url.png' }) // Add your own icon URL
                 .setTitle('Server Status (Part 1)')
                 .setDescription('Server Status with Players')
                 .addFields(
-                    { name: 'Server Name', value: serverStates.map(s => s.name).join('\n'), inline: true },
+                    { name: '#.   Server Name', value: serverStates.map(s => `${s.number}. ${s.name}`).join('\n'), inline: true },
                     { name: 'Status', value: serverStates.map(s => s.state).join('\n'), inline: true },
                     { name: 'Players', value: serverStates.map(s => s.players).join('\n'), inline: true }
                 )
                 .setTimestamp()
                 .setFooter({ text: `Last Update: ${lastUpdatedTime}`, iconURL: 'https://some-footer-icon-url.png' });
 
+            // Second Embed with matching numbers, tier, avg ticks, and game duration
             const serverEmbed2 = new EmbedBuilder()
                 .setColor(0x0099ff)
                 .setAuthor({ name: 'Satisfactory Bot', iconURL: 'https://some-icon-url.png' }) // Add your own icon URL
                 .setTitle('Server Status (Part 2)')
-                .setDescription('Server Avg Ticks and Duration')
+                .setDescription('Tier, Avg Ticks, and Duration')
                 .addFields(
-                    { name: 'Server Name', value: serverStates.map(s => s.name).join('\n'), inline: true },
+                    { name: '#.   Tier', value: serverStates.map(s => `${s.number}. ${s.tier}`).join('\n'), inline: true },
                     { name: 'Avg Ticks', value: serverStates.map(s => s.avgTicks).join('\n'), inline: true },
                     { name: 'Game Duration', value: serverStates.map(s => s.duration).join('\n'), inline: true }
                 )
