@@ -1,15 +1,13 @@
-const { SlashCommandBuilder } = require('discord.js');
+﻿const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { servers } = require('../../servers.json');
 const fs = require('node:fs');
 const fsPromise = require('node:fs/promises');
 
-//this command does not work, do not run
-
 module.exports = {
-    cooldown: 3600, //1 hour
+    cooldown: 3600, // 1 hour cooldown
     data: new SlashCommandBuilder()
         .setName('downloadsave')
-        .setDescription('Download a Server Save') //TODO: generalize
+        .setDescription('Download a Server Save')
         .addStringOption(option =>
             option.setName('server')
                 .setDescription('Select a server')
@@ -26,13 +24,14 @@ module.exports = {
         const serverIp = servers[selectedServer];
 
         if (!serverIp) {
-            await interaction.reply(`Server IP for ${selectedServer} not found`)
+            await interaction.reply(`Server IP for ${selectedServer} not found`);
+            return;
         }
 
-        // Defer reply early to prevent timeout issues
+        // Defer the reply to allow more time for processing without ephemeral
         await interaction.deferReply();
 
-        // Get name of current session from server
+        // Fetch the current session name from the server
         const fetchCurrentSession = async (serverIp) => {
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
@@ -45,21 +44,18 @@ module.exports = {
                 });
 
                 const data = await response.json();
-
                 if (!data.data || !data.data.serverGameState) {
-                    console.error('Unexpected API response while querying session name', data);
                     return null;
                 }
 
                 return data.data.serverGameState.activeSessionName;
-
             } catch (error) {
-                console.error('Error querying session name', error);
+                console.error('Error querying session name:', error);
                 return null;
             }
         };
 
-        //Get list of sessions form server
+        // Fetch the latest save name for the current session
         const fetchSaveName = async (serverIp) => {
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
@@ -72,89 +68,109 @@ module.exports = {
                 });
 
                 const data = await response.json();
-
                 if (!data.data || !data.data.sessions) {
-                    console.error('Unexpected API response while fetching sessions', data);
                     return null;
                 }
 
-                currentSession = await fetchCurrentSession(serverIp);
-                options = data.data.sessions.find(obj => obj.sessionName === currentSession);
-                if (!options) {
-                    await interaction.editReply('Failed to fetch save files.');
-                    return;
-                }
+                const currentSession = await fetchCurrentSession(serverIp);
+                const sessionOptions = data.data.sessions.find(session => session.sessionName === currentSession);
 
-                for (i in options.saveHeaders) {
-                    var memory;
-                    ;
-                    if (!memory) {
-                        memory = options.saveHeaders[i];
-                        continue;
-                    }
+                if (!sessionOptions) return null;
 
-                    if (memory.saveDateTime < options.saveHeaders[i].saveDateTime) {
-                        memory = options.saveHeaders[i];
-                        continue;
+                // Find the most recent save based on saveDateTime
+                let latestSave = sessionOptions.saveHeaders[0];
+                for (const header of sessionOptions.saveHeaders) {
+                    if (header.saveDateTime > latestSave.saveDateTime) {
+                        latestSave = header;
                     }
                 }
 
-                return memory.saveName;
-
-            } catch (error){
-                console.error('Error fetching save file', error);
+                return latestSave.saveName;
+            } catch (error) {
+                console.error('Error fetching save file:', error);
                 return null;
             }
         };
 
-        // Download Save and store locally
+        // Download the save file from the server
         const fetchDownloadFile = async (serverIp, downloadSaveName) => {
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${apiToken}`,
-                        'Content-Type': 'application/json',
-                        encoding: null
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ "function": "DownloadSaveGame", "data": { "SaveName": `${downloadSaveName}` } })
                 });
 
                 const data = await response.arrayBuffer();
 
-                if (!data) {
-                    console.error('Unexpected API response: ', data);
-                    return null
-                }
-
-                try {
-                    await fsPromise.writeFile(`./fileTransfer/${downloadSaveName}.sav`, Buffer.from(data));
-                } catch (error) {
-                    console.error(`write failed`, error);
-                }
-
-                return data
-
+                // Save the downloaded file to a local directory
+                await fsPromise.writeFile(`./fileTransfer/${downloadSaveName}.sav`, Buffer.from(data));
+                return data;
             } catch (error) {
-                console.error(`Error fetching save file`, error);
+                console.error(`Error downloading save file`, error);
                 return null;
             }
         };
 
-        // Do all the Things
+        // Main execution flow
         const downloadSaveName = await fetchSaveName(serverIp);
+        if (!downloadSaveName) {
+            await interaction.editReply({
+                content: `❌ Failed to fetch save file for **${selectedServer}**.`
+            });
+            return;
+        }
+
+        await interaction.editReply({
+            content: `⏳ Fetching and downloading the save file for **${selectedServer}**...`
+        });
+
         const saveFile = await fetchDownloadFile(serverIp, downloadSaveName);
 
-        // Reply with the save and delete local records
-        try {
-            await interaction.editReply({ content: `File to download \n${downloadSaveName}`, files: [`./fileTransfer/${downloadSaveName}.sav`] });
-        } catch (error) {
-            console.error('Faild to Send File', error);
+        if (!saveFile) {
+            await interaction.editReply({
+                content: `❌ Failed to download save file for **${selectedServer}**.`
+            });
+            return;
         }
+
+        // Reply with the save file and then delete it locally
+        try {
+            const embed = new EmbedBuilder()
+                .setColor(0x00AE86)
+                .setTitle('Server Save Download')
+                .setDescription(`✅ Successfully fetched save file for **${selectedServer}**.`)
+                .addFields(
+                    { name: 'Save File', value: `\`${downloadSaveName}\`` }
+                )
+                .setThumbnail('https://satisfactory.wiki.gg/images/thumb/5/5b/Blueprint_Designer_Mk.2.png/300px-Blueprint_Designer_Mk.2.png') // Thumbnail Image
+                .setTimestamp()
+                .setFooter({ text: 'Satisfactory Bot', iconURL: 'https://some-footer-icon-url.png' }); // Add footer icon URL
+
+            await interaction.editReply({
+                embeds: [embed],
+                files: [`./fileTransfer/${downloadSaveName}.sav`]
+            });
+
+            // Update the original message to indicate completion
+            await interaction.editReply({
+                content: `✅ Save file for **${selectedServer}** has been successfully downloaded and sent.`
+            });
+        } catch (error) {
+            console.error('Failed to send file:', error);
+            await interaction.editReply({
+                content: `❌ Failed to send the save file for **${selectedServer}**.`
+            });
+        }
+
+        // Clean up the local file
         try {
             fs.unlinkSync(`./fileTransfer/${downloadSaveName}.sav`);
         } catch (err) {
-            console.error('File Delete Failed', err);
+            console.error('File deletion failed:', err);
         }
     }
-}
+};
