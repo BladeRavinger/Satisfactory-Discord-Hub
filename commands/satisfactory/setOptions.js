@@ -1,4 +1,15 @@
-const { SlashCommandBuilder, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const {
+    SlashCommandBuilder,
+    ModalBuilder,
+    TextInputBuilder,
+    ActionRowBuilder,
+    TextInputStyle,
+    EmbedBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    PermissionFlagsBits
+} = require('discord.js');
+
 const { servers } = require('../../servers.json');
 
 module.exports = {
@@ -23,12 +34,11 @@ module.exports = {
         const serverIp = servers[selectedServer];
 
         if (!serverIp) {
-            await interaction.reply(`Server IP for ${selectedServer} not found.`);
+            await interaction.reply({ content: `Server IP for ${selectedServer} not found.`, ephemeral: false });
             return;
         }
 
-        // Defer reply early to prevent timeout issues
-        await interaction.deferReply();
+        console.log(`Fetching server options for ${selectedServer} with IP ${serverIp}`);
 
         const fetchServerOptions = async (serverIp) => {
             try {
@@ -59,7 +69,7 @@ module.exports = {
         const options = await fetchServerOptions(serverIp);
 
         if (!options) {
-            await interaction.editReply(`Could not fetch options for ${selectedServer}.`);
+            await interaction.reply({ content: `Could not fetch options for ${selectedServer}.`, ephemeral: false });
             return;
         }
 
@@ -75,7 +85,7 @@ module.exports = {
         const formatTime = (totalMinutes) => {
             const hours = Math.floor(totalMinutes / 60);
             const minutes = totalMinutes % 60;
-            return `${hours}h ${minutes < 10 ? '0' : ''}${minutes}m`; // Ensure two-digit minute format
+            return `${hours}h ${minutes < 10 ? '0' : ''}${minutes}m`;
         };
 
         const formattedOptions = Object.keys(options).map(key => {
@@ -94,16 +104,22 @@ module.exports = {
                 option: value
             };
         });
-        // Original embed with settings and options
+
+        // Embed with improved aesthetics and an image
         const initialEmbed = new EmbedBuilder()
             .setTitle(`${selectedServer} Options`)
+            .setDescription('Below are the current server options:')
+            .setThumbnail('https://static.wikia.nocookie.net/satisfactory_gamepedia_en/images/b/be/Build_Gun.png/revision/latest?cb=20221115150746') // Add your thumbnail image URL here
+            .setImage('https://example.com/banner-image.png') // Add your main image URL here
             .addFields(
                 { name: 'Settings', value: formattedOptions.map(opt => opt.setting).join('\n'), inline: true },
                 { name: 'Option', value: formattedOptions.map(opt => opt.option).join('\n'), inline: true }
             )
-            .setColor(0x00AE86);
+            .setColor(0x00AE86) // Change color to match the theme
+            .setTimestamp()
+            .setFooter({ text: 'Server Management', iconURL: 'https://example.com/footer-icon.png' }); // Add a footer icon
 
-        const message = await interaction.editReply({
+        const message = await interaction.reply({
             embeds: [initialEmbed],
             components: [
                 {
@@ -115,14 +131,14 @@ module.exports = {
                             .setStyle(ButtonStyle.Primary)
                     ]
                 }
-            ]
+            ],
+            fetchReply: true
         });
 
-        const filter = i => i.customId === 'open_modal' && i.user.id === interaction.user.id;
-        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
+        let newOptions = {}; // Global variable to store new options
 
-        // Declare newOptions outside modal handler
-        let newOptions = {};
+        const filter = i => i.customId === 'open_modal' && i.user.id === interaction.user.id;
+        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 180000 });
 
         collector.once('collect', async i => {
             if (i.customId === 'open_modal') {
@@ -173,9 +189,8 @@ module.exports = {
                     new ActionRowBuilder().addComponents(sendGameplayInput)
                 );
 
-                                await i.showModal(modal); // No defer here
+                await i.showModal(modal); // No defer here
 
-                // Register once for the modal submit
                 const handleModalSubmit = async (modalInteraction) => {
                     if (!modalInteraction.isModalSubmit()) return;
                     if (modalInteraction.customId !== 'change_options_modal') return;
@@ -219,12 +234,17 @@ module.exports = {
                         // Update the original embed
                         const updatedEmbed = new EmbedBuilder()
                             .setTitle(`${selectedServer} Updated Options`)
+                            .setDescription('Here are the changes you have made:')
+                            .setThumbnail('https://static.wikia.nocookie.net/satisfactory_gamepedia_en/images/b/be/Build_Gun.png/revision/latest?cb=20221115150746') // Add your thumbnail image URL here
+                            .setImage('https://example.com/banner-image.png') // Add your main image URL here
                             .addFields(
                                 { name: 'Settings', value: Object.keys(newOptions).map(k => optionNameMapping[k]).join('\n'), inline: true },
                                 { name: 'Old Option', value: oldValues.join('\n'), inline: true },
                                 { name: 'New Option', value: newValues.join('\n'), inline: true }
                             )
-                            .setColor(0x00AE86);
+                            .setColor(0x00AE86)
+                            .setTimestamp()
+                            .setFooter({ text: 'Server Management', iconURL: 'https://example.com/footer-icon.png' }); // Add a footer icon
 
                         await message.edit({
                             embeds: [updatedEmbed],
@@ -257,16 +277,11 @@ module.exports = {
         });
 
         // Button collector for submit/cancel
-        const buttonCollector = interaction.channel.createMessageComponentCollector({ time: 60000 });
+        const buttonCollector = interaction.channel.createMessageComponentCollector({ time: 180000 });
 
         buttonCollector.on('collect', async (buttonInteraction) => {
             try {
                 if (buttonInteraction.customId === 'submit_changes') {
-                    if (buttonInteraction.replied || buttonInteraction.deferred) {
-                        console.log('Interaction already acknowledged.');
-                        return;
-                    }
-
                     await buttonInteraction.deferReply(); // Acknowledge the button interaction
 
                     const response = await fetch(`https://${serverIp}/api/v1`, {
@@ -284,13 +299,25 @@ module.exports = {
                     });
 
                     await buttonInteraction.editReply({ content: 'Changes applied successfully.', components: [] });
-                } else if (buttonInteraction.customId === 'cancel_changes') {
-                    if (buttonInteraction.replied || buttonInteraction.deferred) {
-                        console.log('Interaction already acknowledged.');
-                        return;
-                    }
 
-                    await buttonInteraction.update({ content: 'Changes canceled.', components: [] });
+                    // Update original message to remove buttons
+                    await message.edit({
+                        components: []
+                    });
+
+                    // Stop the collector after completion
+                    buttonCollector.stop();
+                } else if (buttonInteraction.customId === 'cancel_changes') {
+                    await buttonInteraction.deferReply(); // Acknowledge the button interaction
+                    await buttonInteraction.editReply({ content: 'Changes canceled.', components: [] });
+
+                    // Update original message to remove buttons
+                    await message.edit({
+                        components: []
+                    });
+
+                    // Stop the collector after completion
+                    buttonCollector.stop();
                 }
             } catch (error) {
                 console.error('Error applying server options:', error);
@@ -298,6 +325,11 @@ module.exports = {
                     await buttonInteraction.reply({ content: 'Error applying server options.', components: [] });
                 }
             }
+        });
+
+        // Once either button is clicked, the button collector stops and no further interactions are handled
+        buttonCollector.on('end', () => {
+            console.log('Button collector stopped.');
         });
     }
 };
