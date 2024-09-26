@@ -1,17 +1,17 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+﻿const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { servers } = require('../../servers.json'); // Import your servers.json
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('serverstatus')
-        .setDescription('Get the status of a specific server with auto-refresh every minute')
+        .setDescription('📊 Get the status of a specific server with auto-refresh every minute') // Added emoji to the command description
         .addStringOption(option =>
             option.setName('server')
-                .setDescription('Select a server to view its status')
+                .setDescription('🌐 Select a server to view its status') // Added emoji to the option description
                 .setRequired(true)
                 .addChoices(
                     Object.entries(servers).slice(0, 25).map(([serverName, serverIp]) => ({
-                        name: serverName,
+                        name: `🌍 ${serverName}`, // Added emoji to each server name
                         value: serverName
                     }))
                 )
@@ -21,7 +21,7 @@ module.exports = {
         const serverIp = servers[selectedServer];
 
         if (!serverIp) {
-            await interaction.reply(`Server IP for ${selectedServer} not found.`);
+            await interaction.reply(`❌ Server IP for ${selectedServer} not found.`); // Added error emoji
             return;
         }
 
@@ -66,14 +66,19 @@ module.exports = {
             if (!serverState) {
                 return new EmbedBuilder()
                     .setColor(0xff0000)
-                    .setTitle(`${selectedServer} Status`)
-                    .setDescription('Server Unresponsive')
+                    .setTitle(`❌ ${selectedServer} Status`) // Added error emoji
+                    .setDescription('⚠️ Server Unresponsive') // Added warning emoji
+                    .setThumbnail('https://cdn2.steamgriddb.com/logo_thumb/164f4bfe061c94c60871d700d953f2f5.png') // Placeholder for thumbnail image URL
                     .addFields(
-                        { name: 'Players', value: 'N/A', inline: true },
-                        { name: 'Avg Ticks', value: 'N/A', inline: true },
-                        { name: 'Game Duration', value: 'N/A', inline: true }
+                        { name: '👥 Players', value: 'N/A', inline: true }, // Added player emoji
+                        { name: '📊 Avg Ticks', value: 'N/A', inline: true }, // Added graph emoji
+                        { name: '⏳ Game Duration', value: 'N/A', inline: true } // Added clock emoji
                     )
-                    .setTimestamp();
+                    .setTimestamp()
+                    .setFooter({
+                        text: 'Server Unresponsive. Check back later!',
+                        iconURL: 'https://example.com/unresponsive-icon.png' // Placeholder for footer icon URL
+                    });
             }
 
             const gameDuration = serverState.totalGameDuration
@@ -82,14 +87,20 @@ module.exports = {
 
             return new EmbedBuilder()
                 .setColor(0x0099ff)
-                .setTitle(`${selectedServer} Status`)
-                .setDescription('Server Online')
+                .setTitle(`✅ ${selectedServer} Status`) // Added checkmark emoji
+                .setDescription('🟢 Server Online') // Added green circle emoji
+                .setThumbnail('https://cdn2.steamgriddb.com/logo_thumb/164f4bfe061c94c60871d700d953f2f5.png') // Placeholder for thumbnail image URL
                 .addFields(
-                    { name: 'Players', value: `${serverState.numConnectedPlayers || 0}/${serverState.playerLimit || 0}`, inline: true },
-                    { name: 'Avg Ticks', value: serverState.averageTickRate ? serverState.averageTickRate.toFixed(3) : 'N/A', inline: true },
-                    { name: 'Game Duration', value: gameDuration, inline: true }
+                    { name: '👥 Players', value: `${serverState.numConnectedPlayers || 0}/${serverState.playerLimit || 0}`, inline: true },
+                    { name: '📊 Avg Ticks', value: serverState.averageTickRate ? serverState.averageTickRate.toFixed(3) : 'N/A', inline: true },
+                    { name: '⏳ Game Duration', value: gameDuration, inline: true }
                 )
-                .setTimestamp();
+                .setImage('https://example.com/server-status-image.png') // Placeholder for embed image URL
+                .setTimestamp()
+                .setFooter({
+                    text: 'Server Status Updated',
+                    iconURL: 'https://example.com/footer-icon.png' // Placeholder for footer icon URL
+                });
         };
 
         // Send the initial embed
