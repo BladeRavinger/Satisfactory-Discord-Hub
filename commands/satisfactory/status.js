@@ -5,18 +5,18 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('allserverstates')
         .setDescription('Get the status of all servers with auto-refresh every minute'),
-    async execute(interaction, apiToken) {
+    async execute(interaction) {
         console.log('Fetching server states for all servers with embed');
 
         const selectedServers = Object.keys(servers); // Fetch all servers from the servers.json file
 
         // Function to query the server and return the details for each one
-        const fetchServerState = async (serverIp) => {
+        const fetchServerState = async (serverIp, apiToken) => {
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
                     method: 'POST',
                     headers: {
-                        Authorization: 'Bearer ' + apiToken,
+                        Authorization: `Bearer ${apiToken}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ "function": "QueryServerState" })
@@ -26,7 +26,7 @@ module.exports = {
 
                 if (data.errorCode === 'invalid_token') {
                     console.log(`Token has expired for server: ${serverIp}. Retrying with the same token...`);
-                    return null;
+                    return null
                 }
 
                 if (!data.data || !data.data.serverGameState) {
@@ -46,18 +46,19 @@ module.exports = {
         const fetchAndUpdateServerState = async () => {
             const serverStates = await Promise.all(
                 selectedServers.map(async (serverName, index) => { // Added index to use for numbering
-                    const serverIp = servers[serverName];
-                    const serverState = await fetchServerState(serverIp);
+                    const serverIp = servers[serverName].address;
+                    const apiToken = servers[serverName].token;
+                    const serverState = await fetchServerState(serverIp, apiToken);
 
                     if (!serverState) {
                         return {
                             number: index + 1,
                             name: `${serverName}`,
-                            state: 'Unresponsive',
+                            state: 'Token Invalid',
                             players: 'N/A',
                             avgTicks: 'N/A',
                             duration: 'N/A',
-                            tier: '0/9'  // Default tier value for unresponsive servers
+                            tier: 'N/A'  // Default tier value for unresponsive servers
                         };
                     }
 

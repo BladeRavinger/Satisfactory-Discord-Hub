@@ -10,7 +10,7 @@ module.exports = {
                 .setDescription('Select the server to restart')
                 .setRequired(true)
                 .addChoices(
-                    Object.entries(servers).slice(0, 25).map(([serverName, serverIp]) => ({
+                    Object.entries(servers).slice(0, 25).map(([serverName]) => ({
                         name: serverName,
                         value: serverName
                     }))
@@ -19,10 +19,11 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .setDMPermission(false),
 
-    async execute(interaction, apiToken) {
+    async execute(interaction) {
         //Get the selected server
         const selectedServer = interaction.options.getString('server');
-        const serverIp = servers[selectedServer];
+        const serverIp = servers[selectedServer].serverIp;
+        const apiToken = servers[selectedServer].key;
 
         // Defer reply early to prevent timeout issues
         await interaction.deferReply();

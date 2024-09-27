@@ -1,5 +1,5 @@
 require('dotenv').config()
-if (process.env.apiToken === 'SF_API_TOKEN') {
+if (process.env.discordToken === 'Token_Here') {
 	console.log("Copy .env.example and remane to .env with your details to run");
 	return;
 }

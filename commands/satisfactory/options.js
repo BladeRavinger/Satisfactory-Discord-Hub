@@ -10,7 +10,7 @@ module.exports = {
                 .setDescription('Select a server to query')
                 .setRequired(true)
                 .addChoices(
-                    Object.entries(servers).slice(0, 25).map(([serverName, serverIp]) => ({
+                    Object.entries(servers).slice(0, 25).map(([serverName]) => ({
                         name: serverName,
                         value: serverName
                     }))
@@ -18,12 +18,13 @@ module.exports = {
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .setDMPermission(false),
-    async execute(interaction, apiToken) {
+    async execute(interaction) {
         // Get the selected server from the interaction
         const selectedServer = interaction.options.getString('server');
 
         // Fetch the server IP from servers.json
-        const serverIp = servers[selectedServer];
+        const serverIp = servers[selectedServer].address;
+        const apiToken = servers[selectedServer].token;
 
         // Check if the serverIp is undefined
         if (!serverIp) {

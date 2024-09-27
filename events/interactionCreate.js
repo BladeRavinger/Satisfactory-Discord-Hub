@@ -36,7 +36,7 @@ module.exports = {
 		setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
 		try {
-			await command.execute(interaction, process.env.apiToken);
+			await command.execute(interaction);
 		} catch (error) {
 			console.error(error);
 			if (interaction.replied || interaction.deferred) {

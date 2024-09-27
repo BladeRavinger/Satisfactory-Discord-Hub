@@ -16,9 +16,11 @@ module.exports = {
                     }))
                 )
         ),
-    async execute(interaction, apiToken) {
+    async execute(interaction) {
         const selectedServer = interaction.options.getString('server');
-        const serverIp = servers[selectedServer];
+        // Fetch the server IP from servers.json
+        const serverIp = servers[selectedServer].address;
+        const apiToken = servers[selectedServer].token;
 
         if (!serverIp) {
             await interaction.reply(`❌ Server IP for ${selectedServer} not found.`); // Added error emoji

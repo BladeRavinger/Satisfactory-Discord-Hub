@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "SF_SERVER_NAME": {
+      "address": "SF_SERVER_IP:PORT",
+      "token": "SF_API_TOKEN_HERE"
+    }
+  }
+}

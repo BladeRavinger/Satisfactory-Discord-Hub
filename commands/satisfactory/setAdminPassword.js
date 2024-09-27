@@ -27,12 +27,11 @@ module.exports = {
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .setDMPermission(false),
-    async execute(interaction, apiToken) {
+    async execute(interaction) {
         const selectedServer = interaction.options.getString('server');
-        const serverIp = servers[selectedServer];
-        if (interaction.options.getString('newtoken') != null) {
-            apiToken = interaction.options.getString('newtoken')
-        }
+        // Fetch the server IP from servers.json
+        const serverIp = servers[selectedServer].address;
+        const apiToken = servers[selectedServer].token;
         const password = interaction.options.getString('password');
 
         if (!serverIp) {
