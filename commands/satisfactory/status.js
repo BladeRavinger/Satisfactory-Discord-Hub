@@ -4,7 +4,8 @@ const { servers } = require('../../servers.json'); // Import your servers.json
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('allserverstates')
-        .setDescription('Get the status of all servers with auto-refresh every minute'),
+        .setDescription('Get the status of all servers with auto-refresh every minute')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
     async execute(interaction) {
         console.log('Fetching server states for all servers with embed');
         await interaction.deferReply({  });
