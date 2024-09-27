@@ -7,7 +7,7 @@ module.exports = {
         .setDescription('Get the status of all servers with auto-refresh every minute'),
     async execute(interaction) {
         console.log('Fetching server states for all servers with embed');
-
+        await interaction.deferReply({  });
         const selectedServers = Object.keys(servers); // Fetch all servers from the servers.json file
 
         // Function to query the server and return the details for each one
@@ -44,6 +44,7 @@ module.exports = {
 
         // Function to fetch and update server state
         const fetchAndUpdateServerState = async () => {
+
             const serverStates = await Promise.all(
                 selectedServers.map(async (serverName, index) => { // Added index to use for numbering
                     const serverIp = servers[serverName].address;
@@ -87,7 +88,7 @@ module.exports = {
                 .addFields(
                     { name: '#.   Server Name', value: serverStates.map(s => `${s.number}. ${s.name}`).join('\n'), inline: true },
                     { name: 'Status', value: serverStates.map(s => s.state).join('\n'), inline: true },
-                    { name: 'Players', value: serverStates.map(s => s.players).join('\n'), inline: true }
+                    { name: 'Players', value: serverStates.map(s => s.players).join('\n'), inline: true },
                 )
                 .setTimestamp()
                 .setFooter({ text: `Last Update: ${lastUpdatedTime}`, iconURL: 'https://some-footer-icon-url.png' });
@@ -111,7 +112,7 @@ module.exports = {
 
         // Send the initial embeds
         const initialEmbeds = await fetchAndUpdateServerState();
-        const message = await interaction.reply({ embeds: initialEmbeds, fetchReply: true });
+        const message = await interaction.editReply({ embeds: initialEmbeds, fetchReply: true });
 
         // Set up an interval to update the embeds every minute
         const interval = setInterval(async () => {
