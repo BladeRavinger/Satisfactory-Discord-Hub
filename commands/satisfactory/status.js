@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { servers } = require('../../servers.json'); // Import your servers.json
 
 module.exports = {
@@ -118,8 +118,13 @@ module.exports = {
         // Set up an interval to update the embeds every minute
         const interval = setInterval(async () => {
             const updatedEmbeds = await fetchAndUpdateServerState();
-            await message.edit({ embeds: updatedEmbeds });
-        }, 60000); // 60000 ms = 1 minute
+            try {
+                await message.edit({ embeds: updatedEmbeds });
+            } catch (error) {
+                console.error('Could not find message to update', error);
+                return clearInterval();
+            }
+        }, 120000); // 60000 ms = 1 minute
 
         /* Uncomment to stop after a set duration */
         // setTimeout(() => clearInterval(interval), 10 * 60000); // Stops after 10 minutes
