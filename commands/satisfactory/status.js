@@ -117,7 +117,8 @@ module.exports = {
                 await message.edit({ embeds: updatedEmbeds });
             } catch (error) {
                 console.error('Could not find message to update', error);
-                return clearInterval();
+                clearInterval();
+                return ;
             }
         }, 120000);
 

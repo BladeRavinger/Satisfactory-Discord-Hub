@@ -2,9 +2,14 @@
   "name": "satisfactory-discord-bot",
   "version": "0.0.0",
   "description": "Satisfactory Discord Bot",
-  "main": "app.js",
+  "main": "Satisfactory-Discord-Bot.js",
+  "scripts": {
+    "start": "node ./Satisfactory-Discord-Bot.js",
+    "pm2:start": "pm2 start ./Satisfactory-Discord-Bot.js --cron-restart='0 0 * * *' --watch --ignore-watch='node_modules, fileTransfer'",
+    "pm2:stop": "pm2 stop ./Satisfactory-Discord-Bot.js --watch"
+  },
   "author": {
-    "name": ""
+    "name": "BladeRavinger & SG1CSIFan"
   },
   "devDependencies": {
     "eslint": "^8.21.0"

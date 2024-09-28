@@ -1,12 +1,13 @@
 require('dotenv').config()
 if (process.env.discordToken === 'Token_Here') {
-	console.log("Copy .env.example and remane to .env with your details to run");
+	console.log("Copy .env.example to .env with your details to run");
 	return;
 }
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { execute } = require('./events/ready');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
