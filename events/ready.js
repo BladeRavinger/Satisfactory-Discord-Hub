@@ -1,6 +1,7 @@
 const { REST, Routes, Events } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
+const { statusHandler } = require('./statusEvents'); // Import the status handler
 
 module.exports = {
 	name: Events.ClientReady,
@@ -32,14 +33,14 @@ module.exports = {
 		// Construct and prepare an instance of the REST module
 		const rest = new REST().setToken(process.env.discordToken);
 
-		// and deploy your commands!
+		// Deploy your commands!
 		(async () => {
 			try {
 				console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
 				// The put method is used to fully refresh all commands in the guild with the current set
 				const data = await rest.put(
-					Routes.applicationGuildCommands(process.env.appId),
+					Routes.applicationGuildCommands(process.env.clientId, process.env.guildId),
 					{ body: commands },
 				);
 
@@ -48,6 +49,12 @@ module.exports = {
 				// And of course, make sure you catch and log any errors!
 				console.error(error);
 			}
+		})();
+
+		// Call the status handler to post the embed when the bot starts
+		console.log(`Bot started, posting server status in channel ${process.env.statusChannelId}`);
+		statusHandler(client).catch(error => {
+			console.error(`Failed to send server status on bot startup: ${error}`);
 		});
 	},
 };
