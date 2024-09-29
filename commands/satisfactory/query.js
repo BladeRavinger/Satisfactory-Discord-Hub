@@ -108,14 +108,5 @@ module.exports = {
         // Send the initial embed
         const initialEmbed = await fetchAndUpdateServerState();
         const message = await interaction.reply({ embeds: [initialEmbed], fetchReply: true });
-
-        // Set up an interval to update the embed every minute
-        const interval = setInterval(async () => {
-            const updatedEmbed = await fetchAndUpdateServerState();
-            await message.edit({ embeds: [updatedEmbed] });
-        }, 60000); // 60000 ms = 1 minute
-
-        /* Uncomment to stop after a set duration */
-        // setTimeout(() => clearInterval(interval), 10 * 60000); // Stops after 10 minutes
     }
 };
