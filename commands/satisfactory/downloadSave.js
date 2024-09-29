@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const fsPromise = require('node:fs/promises');
 
 module.exports = {
-    cooldown: 3600, // 1 hour cooldown
+    cooldown: process.env.downloadCooldown,
     data: new SlashCommandBuilder()
         .setName('downloadsave')
         .setDescription('Download a Server Save')

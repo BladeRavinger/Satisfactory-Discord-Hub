@@ -7,6 +7,26 @@ As the satisfactory API expands, so will this bot. Check back after an update fo
 Please post issues in the issue tracker, provide as much info as possible. If you would like to make a fork and modify this bot, it must remain open source and ensure you include a link to this repo and credits 
 Pull requests will be reviewed in due course and implemented if they improve the bot and are in keeping with our vision.
 
+# Usage
+
+This bot can do a few things for now and this list will grow in time
+
+	Post status to select channel (set in .env)
+
+	query server (everyone)
+
+	download latest save [1 hour cooldown] (everyone)
+
+	save and restart SF servers (Moderate members permission)
+
+	list server settings, Advanced and standard (Moderate members permission)
+
+	update standard settings (Moderate members permission)
+
+	set a client password (Moderate members permission)
+
+most commands are restricted to anyone with the 'Moderate Member' Permission, so moderators can use all commands, anyone without that permission can query and download save.
+
 # Installation
 
 ## Prerequisites
@@ -52,6 +72,10 @@ If you have your own SSL certificate, you can place it with the server (Optional
 	`$InstallRoot$/FactoryGame/Certificates/*`
 
 Placing the Certificate and private key in this directory should allow Satisfactory to use it with the API.
+
+You will also need to make a copy of servers.json and fill in the info with your Server Name, IP:PORT and API Token. Without this info, the bot does not know how to communicate with your server. 
+
+	cp servers.json.example
 
 # Launching
 
