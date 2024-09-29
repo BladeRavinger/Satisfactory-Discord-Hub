@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder} = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { servers } = require('../../servers.json');
 
 module.exports = {
@@ -18,7 +18,11 @@ module.exports = {
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .setDMPermission(false),
+
     async execute(interaction) {
+        // Defer the reply immediately to prevent the interaction from timing out
+        await interaction.deferReply();
+
         // Get the selected server from the interaction
         const selectedServer = interaction.options.getString('server');
 
@@ -28,7 +32,7 @@ module.exports = {
 
         // Check if the serverIp is undefined
         if (!serverIp) {
-            await interaction.reply(`Server IP for ${selectedServer} not found.`);
+            await interaction.editReply(`Server IP for ${selectedServer} not found.`);
             return;
         }
 
@@ -70,7 +74,7 @@ module.exports = {
         const options = await fetchServerOptions(serverIp);
 
         if (!options) {
-            await interaction.reply(`Could not fetch options for ${selectedServer}.`);
+            await interaction.editReply(`Could not fetch options for ${selectedServer}.`);
             return;
         }
 
@@ -91,7 +95,7 @@ module.exports = {
             return `${hours}h ${minutes}m`;
         };
 
-               // Format the options for output in the embed
+        // Format the options for output in the embed
         const settings = [];
         const values = [];
 
@@ -123,6 +127,6 @@ module.exports = {
             .setTimestamp();
 
         // Send the embed as a reply
-        await interaction.reply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
     }
 };
