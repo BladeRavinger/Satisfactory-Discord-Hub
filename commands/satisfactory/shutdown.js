@@ -20,16 +20,30 @@ module.exports = {
         .setDMPermission(false),
 
     async execute(interaction) {
-        //Get the selected server
+        // Get the selected server
         const selectedServer = interaction.options.getString('server');
-        const serverIp = servers[selectedServer].serverIp;
-        const apiToken = servers[selectedServer].key;
+        const serverData = servers[selectedServer];
+
+        // Validate server data
+        if (!serverData || !serverData.address || !serverData.token) {
+            console.error(`Invalid server data for ${selectedServer}:`, serverData);
+            return await interaction.reply(`Failed to find valid server information for ${selectedServer}`);
+        }
+
+        // Correctly access 'address' and 'token' properties
+        const serverIp = serverData.address;
+        const apiToken = serverData.token;
+
+        console.log(`Selected server: ${selectedServer}, IP: ${serverIp}`);
 
         // Defer reply early to prevent timeout issues
         await interaction.deferReply();
 
-        //Get current SaveName
-        const fetchCurrentSession = async (serverIp) => {
+        // Rest of your code remains the same...
+        // (Continue with your fetch functions and error handling)
+
+        // Fetch current session name
+        const fetchCurrentSession = async () => {
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
                     method: 'POST',
@@ -55,8 +69,8 @@ module.exports = {
             }
         };
 
-        //Get list of sessions form server
-        const fetchSaveName = async (serverIp) => {
+        // Fetch save name
+        const fetchSaveName = async () => {
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
                     method: 'POST',
@@ -74,28 +88,20 @@ module.exports = {
                     return null;
                 }
 
-                currentSession = await fetchCurrentSession(serverIp);
-                options = data.data.sessions.find(obj => obj.sessionName === currentSession);
-                if (!options) {
+                const currentSession = await fetchCurrentSession();
+                const session = data.data.sessions.find(obj => obj.sessionName === currentSession);
+
+                if (!session) {
                     await interaction.editReply('Failed to fetch save files.');
-                    return;
+                    return null;
                 }
 
-                for (i in options.saveHeaders) {
-                    var memory;
-                    ;
-                    if (!memory) {
-                        memory = options.saveHeaders[i];
-                        continue;
-                    }
+                // Find the latest save
+                let latestSave = session.saveHeaders.reduce((latest, current) => {
+                    return (current.saveDateTime > latest.saveDateTime) ? current : latest;
+                }, session.saveHeaders[0]);
 
-                    if (memory.saveDateTime < options.saveHeaders[i].saveDateTime) {
-                        memory = options.saveHeaders[i];
-                        continue;
-                    }
-                }
-
-                return memory.saveName;
+                return latestSave.saveName;
 
             } catch (error) {
                 console.error('Error fetching save file', error);
@@ -103,9 +109,13 @@ module.exports = {
             }
         };
 
-        //Save the Server
-        const saveServer = async (serverIp) => {
-            saveName = await fetchSaveName(serverIp);
+        // Save the server
+        const saveServer = async () => {
+            const saveName = await fetchSaveName();
+            if (!saveName) {
+                await interaction.editReply('Failed to save the server.');
+                return;
+            }
             try {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
                     method: 'POST',
@@ -115,24 +125,37 @@ module.exports = {
                     },
                     body: JSON.stringify({ "function": "SaveGame", "data": { "SaveName": `${saveName}_shutdown` } })
                 });
-                return null;
+
+                if (!response.ok) {
+                    console.error('Failed to save the game on the server', response.status, response.statusText);
+                }
             } catch (error) {
-                console.error('Game Save Failed Aborting', error);
+                console.error('Game Save Failed. Aborting.', error);
                 return null;
             }
         };
 
+        await saveServer();
 
-        await saveServer(serverIp);
-        //Run Restart
-        const response = await fetch(`https://${serverIp}/api/v1`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${apiToken}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ "function": "Shutdown" })
-        });
-        await interaction.editReply('Restarting Now');
+        // Run Restart
+        try {
+            const response = await fetch(`https://${serverIp}/api/v1`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${apiToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ "function": "Shutdown" })
+            });
+
+            if (response.ok) {
+                await interaction.editReply('Restarting Now');
+            } else {
+                await interaction.editReply(`Failed to restart the server. HTTP Status: ${response.status} - ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Error restarting the server', error);
+            await interaction.editReply('Failed to restart the server.');
+        }
     }
-}
+};
