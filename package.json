@@ -8,9 +8,15 @@
     "pm2:start": "pm2 start ./Satisfactory-Discord-Bot.js --cron-restart='0 0 * * *' --watch --ignore-watch='node_modules, fileTransfer'",
     "pm2:stop": "pm2 stop ./Satisfactory-Discord-Bot.js --watch"
   },
-  "author": {
-    "name": "BladeRavinger & SG1CSIFan"
-  },
+  "contributors": [
+    "BladeRavinger",
+    "SG1CSIFan"
+  ],
+  "keywords": [
+    "Satisfactory",
+    "Discord",
+    "Bot"
+  ],
   "devDependencies": {
     "eslint": "^8.21.0"
   },

@@ -35,7 +35,7 @@ module.exports = {
                 const response = await fetch(`https://${serverIp}/api/v1`, {
                     method: 'POST',
                     headers: {
-                        Authorization: 'Bearer ' + apiToken,
+                        Authorization: `Bearer ${apiToken}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ "function": "QueryServerState" })

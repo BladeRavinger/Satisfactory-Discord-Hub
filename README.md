@@ -1,4 +1,4 @@
-# Satisfactory Discord Bot
+# Satisfactory Discord Hub
 
 The idea of this bot is to make administration as simple as typing a command in discord as well as giving live* updates on the server status
 
