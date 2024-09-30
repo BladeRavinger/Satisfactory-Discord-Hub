@@ -10,7 +10,7 @@ Pull requests will be reviewed and implemented if they improve the bot and align
 # Usage
 This bot currently supports the following commands, and the list will grow over time:
 
-# /serverstatus
+# /allserverstatus
 Displays the status of all configured servers, showing:
 Server Name
 Server Status (Online/Offline)
@@ -22,6 +22,11 @@ The bot will post updates every 2 minutes in the configured channel and will pos
 Set Channel: You can specify the channel where the updates should be posted.
 
 ![All Server Status Embed](https://drive.google.com/uc?export=view&id=19sLsyWcBvgBml26BR9pAVTqBkm6ip0M_)
+
+# /serverstatus
+Displays the status of a single server
+
+![server status embed](https://drive.google.com/uc?export=view&id=1ynEMJJGz2zfEWO3mU27kEVu26OTAN41Q)
 
 # /changeoptions
 Allows changing in-game settings such as:
@@ -41,7 +46,7 @@ Displays the current server options, allowing you to review settings such as dif
 # /downloadsave
 Saves the game, downloads the current save, and uploads it to Discord. This command allows you to keep a backup of the latest game state and share it easily.
 
-![Server Save Embed](https://drive.google.com/uc?export=view&id=1ynEMJJGz2zfEWO3mU27kEVu26OTAN41Q)
+![Server Save Embed](https://drive.google.com/uc?export=view&id=1P7TIZc0rQL69dFznQsn7rU-BOJWoqP8P)
 
 # /advoptions
 Displays advanced game options, letting you review and adjust detailed settings for the game.
