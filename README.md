@@ -85,51 +85,42 @@ Configuration:
 
 Copy the environment template and fill out the necessary fields:
 
-bash
-Copy code
-cp .env.example .env
+	cp .env.example .env
 You can get the Satisfactory API token from your server's admin panel by using the command:
 
-bash
-Copy code
-server.GenerateAPIToken
+	server.GenerateAPIToken
 You can find the Discord bot token and appId on the Discord Developer Portal: https://discord.com/developers/applications.
 If you have an SSL certificate, you can place it in the following directory:
-ruby
-Copy code
-$InstallRoot$/FactoryGame/Certificates/*
-Server Configuration:
+	
+	$InstallRoot$/FactoryGame/Certificates/*
 
-Make a copy of servers.json.example and fill it with your server's details (Name, IP
-, and API Token):
-bash
-Copy code
-cp servers.json.example servers.json
-Launching
+# Server Configuration:
+
+Make a copy of servers.json.example and fill it with your server's details (Name, IP, and API Token):
+
+	cp servers.json.example servers.json
+# Launching
+
 There are multiple ways to start the bot. We've included some scripts to help with this:
 
 # Basic Startup:
 
-bash
-Copy code
-npm run start
+	npm run start
 Note: If you run this in a terminal, the bot will stop once the shell closes.
 
 # With pm2:
 
-bash
-Copy code
-npm run pm2:start
-npm run pm2:stop
+	npm run pm2:start
+	npm run pm2:stop
+
 The pm2 script automatically restarts the bot at midnight and watches specific folders. If you pull updates, the bot will automatically restart to apply changes.
 To have pm2 restart your bot whenever the system restarts, run:
 
-bash
-Copy code
-pm2 startup
-pm2 save
-Additional Info
-For any questions or suggestions, feel free to open an issue on GitHub or reach out on Discord: Join our Discord server.
+	pm2 startup
+	pm2 save
+
+# Additional Info
+For any questions or suggestions, feel free to open an issue on GitHub or reach out on Discord: https://discord.gg/Wa9yukZSmd
 
 # Credits
 Big thanks to SG1CSIfan for his invaluable help on this project. This bot is a simplified version of a custom bot we're building for our community over at The Brewery. We maintain 10+ Satisfactory servers, among others, all hosted on privately-owned hardware and free for everyone to use.
