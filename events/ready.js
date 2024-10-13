@@ -1,60 +1,66 @@
 const { REST, Routes, Events } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
-const { statusHandler } = require('./statusEvents'); // Import the status handler
+const { statusHandler } = require('./statusEvents');
+const { richPresenceHandler } = require('./richPresenceHandler');
+const { loadState } = require('../utils/richPresenceUtils'); // Load the state from utils
 
 module.exports = {
-	name: Events.ClientReady,
-	once: true,
-	execute(client) {
-		console.log(`Ready! Logged in as ${client.user.tag}`);
+    name: Events.ClientReady,
+    once: true,
+    async execute(client) {
+        console.log(`Ready! Logged in as ${client.user.tag}`);
 
-		const commands = [];
-		// Grab all the command folders from the commands directory you created earlier
-		const foldersPath = path.join(__dirname, '../commands');
-		const commandFolders = fs.readdirSync(foldersPath);
+        const commands = [];
+        const foldersPath = path.join(__dirname, '../commands');
+        const commandFolders = fs.readdirSync(foldersPath);
 
-		for (const folder of commandFolders) {
-			// Grab all the command files from the commands directory you created earlier
-			const commandsPath = path.join(foldersPath, folder);
-			const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-			// Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
-			for (const file of commandFiles) {
-				const filePath = path.join(commandsPath, file);
-				const command = require(filePath);
-				if ('data' in command && 'execute' in command) {
-					commands.push(command.data.toJSON());
-				} else {
-					console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-				}
-			}
-		}
+        for (const folder of commandFolders) {
+            const commandsPath = path.join(foldersPath, folder);
+            const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+            for (const file of commandFiles) {
+                const filePath = path.join(commandsPath, file);
+                const command = require(filePath);
+                if ('data' in command && 'execute' in command) {
+                    commands.push(command.data.toJSON());
+                } else {
+                    console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+                }
+            }
+        }
 
-		// Construct and prepare an instance of the REST module
-		const rest = new REST().setToken(process.env.discordToken);
+        const { appId, discordToken, statusChannelId } = process.env;
 
-		// Deploy your commands!
-		(async () => {
-			try {
-				console.log(`Started refreshing ${commands.length} application (/) commands.`);
+        if (!appId || !discordToken) {
+            console.error('Error: Missing essential environment variables (appId or discordToken)');
+            return;
+        }
 
-				// The put method is used to fully refresh all commands in the guild with the current set
-				const data = await rest.put(
-					Routes.applicationGuildCommands(process.env.clientId, process.env.guildId),
-					{ body: commands },
-				);
+        const rest = new REST().setToken(discordToken);
 
-				console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-			} catch (error) {
-				// And of course, make sure you catch and log any errors!
-				console.error(error);
-			}
-		})();
+        try {
+            console.log(`Started refreshing ${commands.length} application (/) commands.`);
+            const data = await rest.put(
+                Routes.applicationCommands(appId),
+                { body: commands },
+            );
+            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+        } catch (error) {
+            console.error('Error registering commands:', error);
+        }
 
-		// Call the status handler to post the embed when the bot starts
-		console.log(`Bot started, posting server status in channel ${process.env.statusChannelId}`);
-		statusHandler(client).catch(error => {
-			console.error(`Failed to send server status on bot startup: ${error}`);
-		});
-	},
+        try {
+            console.log(`Bot started, posting server status in channel ${statusChannelId}`);
+            await statusHandler(client);
+        } catch (error) {
+            console.error(`Failed to send server status on bot startup: ${error}`);
+        }
+
+        // Load the saved state and activate rich presence if enabled
+        const savedState = loadState();
+        if (savedState.enabled) {
+            console.log(`Resuming rich presence for server: ${savedState.server}`);
+            await richPresenceHandler(client, savedState.server);
+        }
+    },
 };
