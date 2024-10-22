@@ -68,19 +68,14 @@ Node.js v20.x (untested on other versions)
 Setup
 Clone the Repository:
 
-bash
-Copy code
-git clone https://github.com/BladeRavinger/Satisfactory-Discord-Bot.git
+	git clone https://github.com/BladeRavinger/Satisfactory-Discord-Bot.git
 Install Dependencies: Move into the directory where you cloned the repo, and install the necessary dependencies:
 
-bash
-Copy code
-npm install
+	npm install
 (Optional) Install pm2: To keep the bot running even after server restarts or crashes, you can install pm2 globally:
 
-bash
-Copy code
-npm install pm2@latest -g
+	npm install pm2@latest -g
+ 
 Configuration:
 
 Copy the environment template and fill out the necessary fields:
